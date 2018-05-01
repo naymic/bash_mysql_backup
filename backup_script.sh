@@ -1,42 +1,41 @@
 #!/bin/bash
 
-#Declare database input file
-DB_FILE=$1
+#Get config input file
+CONFIG_FILE=$1
 
-function getValue(){
- echo $(cat "$DB_FILE" | grep -i "$1=" | awk -F "=" '{print $2}'  )
+function getConfigValue(){
+ echo $(cat "$CONFIG_FILE" | grep -i "$1=" | awk -F "=" '{print $2}'  )
 }
-
 
 #Get Script startime
 START_TIME=`date +%s`
 
-
 #Declare static variable
-HOST="$( getValue host)"
-HOSTNAME="$( getValue hostname)"
-USER="$( getValue username)"
-PW="$( getValue password)"
-ROOT_BAK="$(getValue backup_root)${HOSTNAME}/"
+HOST="$( getConfigValue host)"
+HOSTNAME="$( getConfigValue hostname)"
+USER="$( getConfigValue username)"
+PW="$( getConfigValue password)"
+ROOT_BAK="$(getConfigValue backup_root)${HOSTNAME}/"
 DATE=`date '+%Y-%m-%d_%H:%M:%S'`
 
+#Start backup
 echo "Start backup for ${HOST} with ${USER}"
 
-#Fetch databases into array
+#Discover databases
 QUERY=$(mysql -u$USER -p$PW -h$HOST -e "use mysql;SELECT Db FROM db;" 2>&1 | grep -v "Warning: Using a password")
 DATABASES=($(for i in $QUERY; do echo $i |sed 's/\\\\\_/_/g' ; done));
 
-#Check if host exist in backup root
+#Check host folder
 if [ ! -d "${ROOT_BAK}" ]
 then
     mkdir "${ROOT_BAK}"
 fi
 
-#Backup all databases
+#Backup databases
 for i in ${DATABASES[@]}
 do
     echo "Start backup for $i database:"
-    #Check if backup directory exists
+    #Check database folder
     if [ ! -d "$ROOT_BAK$i" ]
     then
         mkdir "$ROOT_BAK$i"
@@ -46,7 +45,7 @@ do
 
 done
 
-#Get 
+#Discover backup runtime
 END_TIME=`date +%s`
 RUNTIME=$((END_TIME-START_TIME))
-echo "Backup of $HOSTNAME ($HOST) finished in $RUNTIME seconds"
+echo "Backup of ${HOSTNAME} (${HOST}) finished in ${RUNTIME} seconds"
