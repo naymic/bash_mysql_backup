@@ -1,0 +1,6 @@
+hostname=<hostname>
+host=<host ip>
+username=<database username>
+password=<database password>
+#don't forget / at the end
+backup_root=<path to backup folder>/
